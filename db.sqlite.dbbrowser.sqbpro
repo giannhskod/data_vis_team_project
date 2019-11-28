@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/home/sp/Documents/msc-in-data-science/courses/core/data-visualization-and-communication/homework/team/db.sqlite" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><current_tab id="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="5161"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="flights"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="airports" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk=""><sort/><column_widths/><filter_values/><display_formats/><hidden_columns/><plot_y_axes/></table><table schema="main" name="flights" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk=""><sort><column index="10" mode="0"/></sort><column_widths/><filter_values/><display_formats/><hidden_columns/><plot_y_axes/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">SELECT a_origin.airport AS o_ap_name,
+a_origin.lat AS o_ap_lat,
+a_origin.long AS o_ap_long,
+a_dest.airport AS d_ap_name,
+a_dest.lat AS d_ap_lat,
+a_dest.long AS d_ap_long,
+f.TailNum AS tail_num,
+COUNT(*) AS tail_num_count
+FROM flights AS f,
+airports AS a_origin,
+airports AS a_dest
+WHERE 1 = 1
+AND f.Origin = a_origin.iata
+AND f.Dest = a_dest.iata
+AND f.year = 2002
+GROUP BY f.TailNum
+ORDER BY f.TailNum ASC</sql><sql name="SQL 2">SELECT DISTINCT f.FlightNum
+FROM flights AS f
+WHERE f.Year = 2002
+ORDER BY 1</sql><current_tab id="0"/></tab_sql></sqlb_project>
