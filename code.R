@@ -24,6 +24,8 @@ suppressMessages(library("sf"))
 suppressMessages(library("shiny"))
 suppressMessages(library("stringr"))
 
+theme = theme_ipsum()
+
 ###################################################################
 # DATA                                                          ###
 ###################################################################
@@ -140,3 +142,112 @@ sqlite_to_df = function(db.name = "db.sqlite", query) {
   
   return(out)
 }
+
+###################################################################
+# PLOTS                                                         ###
+###################################################################
+
+testBarLinePlotWithFacets = function() {
+  data.plot = data.demographics_gdp %>%
+    filter(
+      country == "European Union - 28 countries" | 
+        country == "Portugal" | 
+        country == "Italy" | 
+        country == "Greece" | 
+        country == "Spain", 
+      sex == "Total"
+    ) 
+  
+  # Convert NAs to 0s.
+  data.plot[is.na(data.plot)] = 0
+  
+  # Normalize data.
+  data.plot["life_expectancy"] = lapply(data.plot["life_expectancy"], min_max_normalize)
+  data.plot["gdp"] = lapply(data.plot["gdp"], min_max_normalize)
+  
+  data.plot = data.plot %>% 
+    select(
+      country, 
+      year, 
+      life_expectancy, 
+      gdp
+    ) %>% 
+    mutate(
+      year = as.factor(year)
+    ) %>% 
+    group_by(
+      year, 
+      country
+    ) %>%
+    summarise(
+      life_expectancy_mean = mean(life_expectancy),
+      gdp_mean = mean(gdp)
+    )
+  
+  # Plot.
+  ggplot(
+    data.plot
+  ) + 
+  geom_col(
+    aes(
+      x = year, 
+      y = life_expectancy_mean
+    ), 
+    position = "stack",
+    fill = "grey90"
+  ) +
+  geom_point(
+    aes(
+      x = year, 
+      y = gdp_mean, 
+      col = country
+    ),
+    size = 2
+  ) +
+  geom_line(
+    aes(
+      x = year, 
+      y = gdp_mean, 
+      col = country, 
+      group = country
+    ),
+    size = 1
+  ) +
+  scale_y_continuous(
+    sec.axis = sec_axis(trans = ~ . )
+  ) +
+  # Labels.
+  labs(
+    x = "Year", 
+    y = "Life expectancy / GDP per capita", 
+    title = "Life Expectancy vs. GDP per capita (normalized)", 
+    subtitle = "European Union - 28 countries, Portugal, Italy, Greece and Spain\n\n2000-2017"
+  ) + 
+  # Color.
+  scale_fill_manual(
+    name = "Mean life expectancy",
+    values = c("#FFCC00", "#0000FF", "#20b32c", "#662F00", "#ff7700"),
+    labels = c("E.U.","Greece", "Italy", "Portugal", "Spain")
+  ) + 
+  scale_colour_manual(
+    name = "Mean GDP per capita", 
+    values = c("#FFCC00", "#0000FF", "#20b32c", "#662F00", "#ff7700"), 
+    labels = c("E.U.","Greece", "Italy", "Portugal", "Spain")
+  ) + 
+  theme + 
+  guides(
+    fill = guide_legend(title = "Mean life expectancy"), 
+    color = guide_legend(title = "Mean GDP per capita")
+  ) + 
+  theme(legend.position = "bottom") + 
+  theme(
+    legend.background = element_rect(
+      fill = "gray95", 
+      size = 1, 
+      linetype = "solid", 
+      colour = "gray60"
+    )
+  ) + 
+  facet_grid(country ~ .)
+}
+
