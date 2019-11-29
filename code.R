@@ -6,7 +6,7 @@
 chooseCRANmirror(graphics = TRUE, ind = c(1, 2, 3, 4, 5))
 knitr::opts_chunk$set(echo = TRUE)
 
-list.of.packages = c("dplyr", "dbplyr", "ggplot2", "kableExtra", "readr", "RSQLite", "sf", "shiny", "stringr")
+list.of.packages = c("dplyr", "dbplyr", "ggplot2", "hrbrthemes", "igraph", "kableExtra", "lubridate", "readr", "rnaturalearth", "rnaturalearthhires", "RSQLite", "sf", "shiny", "stringr")
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
 
 if(length(new.packages)) {
@@ -14,17 +14,24 @@ if(length(new.packages)) {
 }
 
 suppressMessages(library("data.table"))
+suppressMessages(library("DBI"))
 suppressMessages(library("dplyr"))
 suppressMessages(library("dbplyr"))
 suppressMessages(library("ggplot2"))
+suppressMessages(library("hrbrthemes"))
+suppressMessages(library("igraph"))
 suppressMessages(library("kableExtra"))
+suppressMessages(library("lubridate"))
 suppressMessages(library("readr"))
-suppressMessages(library("DBI"))
+suppressMessages(library("rnaturalearth"))
+suppressMessages(library("rnaturalearthhires"))
 suppressMessages(library("sf"))
 suppressMessages(library("shiny"))
 suppressMessages(library("stringr"))
 
 theme = theme_ipsum()
+
+
 
 ###################################################################
 # DATA                                                          ###
@@ -33,7 +40,7 @@ theme = theme_ipsum()
 #' Prepares the flight dataset.
 #'
 #' @param: dataframe
-#' @return: dataframe
+#' @return: data.frame
 clean = function(df) {
   # TailNum
   # Remove non-unicode chars.
@@ -47,7 +54,7 @@ clean = function(df) {
 #' Function for ingesting a .csv file.
 #'
 #' @param: .csv file path
-#' @return: dataframe
+#' @return: data.frame
 ingest_one_csv = function(file_path) {
   df = read.csv(file_path, encoding = "ASCII")
   
@@ -57,7 +64,7 @@ ingest_one_csv = function(file_path) {
 #' Function for ingesting a .rds file.
 #'
 #' @param: .rds file path
-#' @return: dataframe
+#' @return: data.frame
 ingest_one_rds = function(file_path) {
   df = readRDS(file_path)
   
@@ -67,7 +74,7 @@ ingest_one_rds = function(file_path) {
 #' Function for ingesting and concatenating .csv files in a directory.
 #'
 #' @param: .csv files directory
-#' @return: dataframe
+#' @return: data.frame
 ingest_all_csv = function(path) {
   df = list.files(path = path, , pattern = ".csv", full.names = TRUE) %>%
     lapply(read.csv) %>% 
@@ -79,7 +86,7 @@ ingest_all_csv = function(path) {
 #' Function for ingesting and concatenating .rds files in a directory.
 #'
 #' @param: .rds files directory
-#' @return: dataframe
+#' @return: data.frame
 ingest_all_rds = function(path) {
   file_list = list.files(path = path, pattern = ".rds")
   df = unlist(lapply(file_list, readRDS))
@@ -92,7 +99,7 @@ ingest_all_rds = function(path) {
 #' @param: dataframe
 #' @param: SQLLite table name
 #' @param: mode
-#' @return: dataframe
+#' @return: data.frame
 df_to_sqlite = function(df, db.name = "db.sqlite", table.name, mode = "append") {
   db = dbConnect(RSQLite::SQLite(), db.name)
   
@@ -109,6 +116,11 @@ df_to_sqlite = function(df, db.name = "db.sqlite", table.name, mode = "append") 
   return(db)
 }
 
+#' Retrieves a SQLite query in a data.frame format.
+#'
+#' @param: database name
+#' @param: SQL query
+#' @return: data.frame
 sqlite_to_df = function(db.name = "db.sqlite", query) {
   df = NULL
   
@@ -142,6 +154,75 @@ sqlite_to_df = function(db.name = "db.sqlite", query) {
   
   return(out)
 }
+
+#' Augments the flights data.frame with "origin" and "destination" information.
+#'
+#' @param: flights data.frame
+#' @param: airports data.frame
+#' @return: data.frame
+# flights_with_coordinates = function(flights_df, airports_df) {
+#   # Create a data.frame with "origin" additional information.
+#   df = inner_join(
+#     flights_df, 
+#     airports_df, 
+#     by = c("Origin" = "iata"),
+#     copy = FALSE, 
+#     suffix = c(".f", ".o")
+#   )
+#   
+#   # Augment the data.frame with "destination" information.
+#   df = inner_join(
+#     df, 
+#     airports_df, 
+#     by = c("Dest" = "iata"),
+#     copy = FALSE, 
+#     suffix = c(".o", ".d")
+#   )
+#   
+#   # Also, translate (lat,long) values to geom.
+#   df[["geom.o"]] = df %>%
+#     st_as_sf(coords = c("long.o", "lat.o"), crs = 4326)
+#   
+#   df[["geom.d"]] = df %>%
+#     st_as_sf(coords = c("long.d", "lat.d"), crs = 4326)
+#   
+#   return(df)
+# }
+
+
+add_datetime_column = function(df, field) {
+  
+  df = df %>%
+    mutate(
+      field = 
+        parse_date_time(
+          paste(
+            paste(
+              paste(
+                df$Year, df$Month, sep = "-"
+              ), 
+              df$DayofMonth, sep = "-"
+            ), 
+            paste(
+              substr(df[[field]], 0, 2), substr(df[[field]], 3, 4), sep = ":")
+            ), 
+          order = "y-m-d HM"
+        )
+      )
+  
+  return(df)
+}
+
+#' Converts (lat,long) pairs to geom points.
+#'
+#' @param: data.frame
+#' @return: data.frame
+lat_log_to_geom = function(df) {
+  df = df %>% st_as_sf(coords = c("long", "lat"), crs = 4326)
+  
+  return(df)
+}
+
 
 ###################################################################
 # PLOTS                                                         ###
