@@ -6,7 +6,7 @@
 chooseCRANmirror(graphics = TRUE, ind = c(1, 2, 3, 4, 5))
 knitr::opts_chunk$set(echo = TRUE)
 
-list.of.packages = c("dplyr", "dbplyr", "ggplot2", "kableExtra", "readr", "RSQLite", "sf", "shiny", "stringr")
+list.of.packages = c("dplyr", "dbplyr", "ggplot2", "kableExtra", "readr", "RSQLite", "sf", "shiny", "stringr","data.table","hrbrthemes")
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
 
 if(length(new.packages)) {
@@ -23,6 +23,7 @@ suppressMessages(library("DBI"))
 suppressMessages(library("sf"))
 suppressMessages(library("shiny"))
 suppressMessages(library("stringr"))
+suppressMessages(library("hrbrthemes"))
 
 theme = theme_ipsum()
 
@@ -142,6 +143,7 @@ sqlite_to_df = function(db.name = "db.sqlite", query) {
   
   return(out)
 }
+
 
 ###################################################################
 # PLOTS                                                         ###
