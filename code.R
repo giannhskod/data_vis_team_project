@@ -6,7 +6,7 @@
 chooseCRANmirror(graphics = TRUE, ind = c(1, 2, 3, 4, 5))
 knitr::opts_chunk$set(echo = TRUE)
 
-list.of.packages = c("dplyr", "dbplyr", "ggplot2", "hrbrthemes", "igraph", "kableExtra", "lubridate", "readr", "rnaturalearth", "rnaturalearthhires", "RSQLite", "sf", "shiny", "stringr")
+list.of.packages = c("dplyr", "dbplyr", "ggplot2", "kableExtra", "readr", "RSQLite", "sf", "shiny", "stringr","data.table","hrbrthemes")
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
 
 if(length(new.packages)) {
@@ -23,15 +23,15 @@ suppressMessages(library("igraph"))
 suppressMessages(library("kableExtra"))
 suppressMessages(library("lubridate"))
 suppressMessages(library("readr"))
+suppressMessages(library("DBI"))
 suppressMessages(library("rnaturalearth"))
 suppressMessages(library("rnaturalearthhires"))
 suppressMessages(library("sf"))
 suppressMessages(library("shiny"))
 suppressMessages(library("stringr"))
+suppressMessages(library("hrbrthemes"))
 
 theme = theme_ipsum()
-
-
 
 ###################################################################
 # DATA                                                          ###
@@ -99,7 +99,7 @@ ingest_all_rds = function(path) {
 #' @param: dataframe
 #' @param: SQLLite table name
 #' @param: mode
-#' @return: data.frame
+#' @return: dataframe
 df_to_sqlite = function(df, db.name = "db.sqlite", table.name, mode = "append") {
   db = dbConnect(RSQLite::SQLite(), db.name)
   
