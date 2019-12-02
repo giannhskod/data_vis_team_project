@@ -16,6 +16,7 @@ list.of.packages = c(
   "gganimate",
   "tidyr",
   "sf",
+  "viridis",
   "shiny",
   "stringr",
   "data.table",
@@ -42,6 +43,7 @@ suppressMessages(library("DBI"))
 suppressMessages(library("gganimate"))
 suppressMessages(library("sf"))
 suppressMessages(library("shiny"))
+suppressMessages(library("viridis"))
 suppressMessages(library("stringr"))
 suppressMessages(library("hrbrthemes"))
 

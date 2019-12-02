@@ -9,38 +9,6 @@
 ##########################################################################
 # 01. Updload the xlsx file to R & Data Preprocessing
 ##########################################################################
-
-# Install Package
-install.packages("readxl")
-install.packages("ggplot2")
-install.packages("ggpmisc")
-install.packages("dplyr")
-install.packages("rbin")
-install.packages("shiny")
-install.packages('shinythemes')
-install.packages("viridis")
-install.packages("viridisLite")
-install.packages("RSQLite")
-install.packages("tidyverse")
-install.packages("kableExtra")
-install.packages("alluvial")
-install.packages("ggalluvial")
-
-# Load Libraries
-library(readxl)
-library(stringr)
-library(ggplot2)
-library(ggpmisc)
-library(dplyr)
-library(rbin)
-library(shiny)
-library(shinythemes)
-library(viridis)
-library(tidyverse)
-library(kableExtra)
-library(alluvial)
-library(ggalluvial)
-
 current_working_dir = "C:/Users/user/Documents/MasterofDataScience/DataVisualization_TEMP/data_vis_team_proj/"
 setwd(current_working_dir)
 source(paste(getwd(), "/base.R", sep = ""))
