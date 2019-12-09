@@ -124,6 +124,7 @@ df_to_sqlite = function(df,
 #' @param: database name
 #' @param: SQL query
 #' @return: data.frame
+#' 
 sqlite_to_df = function(db.name = "db.sqlite", query) {
   df = NULL
   
