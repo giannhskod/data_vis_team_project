@@ -21,7 +21,8 @@ list.of.packages = c(
   "stringr",
   "data.table",
   "hrbrthemes",
-  "alluvial"
+  "alluvial",
+  "ggpubr"
 )
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
 
@@ -46,6 +47,7 @@ suppressMessages(library("shiny"))
 suppressMessages(library("viridis"))
 suppressMessages(library("stringr"))
 suppressMessages(library("hrbrthemes"))
+suppressMessages(library("ggpubr"))
 
 theme = theme_ipsum()
 data_src_dir = paste(getwd(), "/data_src/", sep = "")

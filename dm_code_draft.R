@@ -19,7 +19,7 @@ plot_MKE_df = group_by(df_MKE, Year,)
 count_TUL_df = summarise(plot_TUL_df, TotalTraffic = n())
 count_MKE_df = summarise(plot_MKE_df, TotalTraffic = n())
 count_TUL_df$Airport = rep('Tulsa',nrow(count_TUL_df))
-count_MKE_df$Airport = rep('Milwauke',nrow(count_MKE_df))
+count_MKE_df$Airport = rep('Milwaukee',nrow(count_MKE_df))
 count_df = rbind(count_TUL_df , count_MKE_df)
 
 # Plot
@@ -72,11 +72,11 @@ plot_MKE_df_sev = group_by(df_MKE_sev, Month)
 count_TUL_df_sev = summarise(plot_TUL_df_sev, TotalTraffic = n())
 count_MKE_df_sev = summarise(plot_MKE_df_sev, TotalTraffic = n())
 count_TUL_df_sev$Airport = rep('Tulsa',nrow(count_TUL_df_sev))
-count_MKE_df_sev$Airport = rep('Milwauke',nrow(count_MKE_df_sev))
+count_MKE_df_sev$Airport = rep('Milwaukee',nrow(count_MKE_df_sev))
 count_df_sev = rbind(count_TUL_df_sev , count_MKE_df_sev)
 
-count_df_sev %>%
-  ggplot( aes(x=factor(Month), y=TotalTraffic, group=Airport, color=Airport)) +
+
+sev =   ggplot( count_df_sev, aes(x=factor(Month), y=TotalTraffic, group=Airport, color=Airport)) +
   geom_line(size=2) +
   scale_color_viridis(discrete = TRUE) +
   labs(title = "TUL & MKE total Traffic 2007") +
@@ -107,21 +107,22 @@ count_df_sev %>%
         b = 0,
         l = 0
       )
-    ),
-    legend.title = element_text(color = "black", size = 14),
-    legend.text = element_text(size = 20))
+    )
+    #legend.title = element_text(color = "black", size = 14),
+    #legend.text = element_text(size = 20)
+    )
 
-
+sev = sev + theme(legend.position="none")
 plot_TUL_df_eig = group_by(df_TUL_eig, Month)
 plot_MKE_df_eig = group_by(df_MKE_eig, Month)
 count_TUL_df_eig = summarise(plot_TUL_df_eig, TotalTraffic = n())
 count_MKE_df_eig = summarise(plot_MKE_df_eig, TotalTraffic = n())
 count_TUL_df_eig$Airport = rep('Tulsa',nrow(count_TUL_df_eig))
-count_MKE_df_eig$Airport = rep('Milwauke',nrow(count_MKE_df_eig))
+count_MKE_df_eig$Airport = rep('Milwaukee',nrow(count_MKE_df_eig))
 count_df_eig = rbind(count_TUL_df_eig , count_MKE_df_eig)
 
-count_df_eig %>%
-  ggplot( aes(x=factor(Month), y=TotalTraffic, group=Airport, color=Airport)) +
+
+eig =   ggplot(count_df_eig, aes(x=factor(Month), y=TotalTraffic, group=Airport, color=Airport)) +
   geom_line(size=2) +
   scale_color_viridis(discrete = TRUE) +
   labs(title = "TUL & MKE total Traffic 2008") +
@@ -129,18 +130,7 @@ count_df_eig %>%
   ylab("Traffic (Destination + Arrivals)") +
   xlab("Months") +
   theme(
-    axis.title.y = element_text(
-      color = "#3D3D3D",
-      size = 14,
-      face = "bold",
-      hjust = 0.5,
-      margin = margin(
-        t = 0,
-        r = 20,
-        b = 0,
-        l = 0
-      )
-    ),
+    axis.title.y = element_blank(),
     axis.title.x = element_text(
       color = "#3D3D3D",
       size = 14,
@@ -155,7 +145,8 @@ count_df_eig %>%
     ),
     legend.title = element_text(color = "black", size = 14),
     legend.text = element_text(size = 20))
-
-
+eig = eig + theme(legend.position="none")
+ggarrange(sev,eig,
+          ncol = 2)
 
 ##################################
