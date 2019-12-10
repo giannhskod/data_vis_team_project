@@ -1,0 +1,10 @@
+# exclude everything
+data_src/*
+
+# exception to the rule
+!data_src/.gitkeep
+
+.RData
+.Rhistory
+*.gif
+

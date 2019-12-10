@@ -15,6 +15,11 @@ dataset_path = "C:\\Users\\dimitris\\Documents\\DataScience\\visualization\\Hand
 #dataset = read.table(paste(dataset_path,"2002.csv",sep = ""), header=T,sep = ",")
 
 dataset = ingest_one_csv(paste(dataset_path,"2003.csv",sep = ""))
+current_working_dir = "C:\\Users\\dimitris\\Documents\\DataScience\\visualization\\Hands_on_project\\data_vis_team_project\\"
+setwd(current_working_dir)
+source(paste(getwd(), "/base.R", sep = ""))
+
+dataset = ingest_one_csv("2003.csv")
 
 group_uc = group_by(dataset, UniqueCarrier)
 mean_delay = summarize(group_uc, DepDelay = mean(DepDelay,na.rm =T),ArrDelay = mean(ArrDelay, na.rm = T))

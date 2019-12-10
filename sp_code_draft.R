@@ -2,31 +2,14 @@
 # DEPENDENCIES and GLOBALS                                      ###
 ###################################################################
 
-# Install required packages if not already installed
-chooseCRANmirror(graphics = TRUE, ind = c(1, 2, 3, 4, 5))
-knitr::opts_chunk$set(echo = TRUE)
+# Add path for the function library file
+current_working_dir = ""
+setwd(current_working_dir)
+source(paste(getwd(), "/base.R", sep = ""))
 
-list.of.packages = c("dplyr", "dbplyr", "ggplot2", "kableExtra", "readr", "RSQLite", "sf", "shiny", "stringr","data.table","hrbrthemes")
-new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
-
-if(length(new.packages)) {
-  install.packages(new.packages, dependencies = TRUE)
-}
-
-suppressMessages(library("data.table"))
-suppressMessages(library("dplyr"))
-suppressMessages(library("dbplyr"))
-suppressMessages(library("ggplot2"))
-suppressMessages(library("kableExtra"))
-suppressMessages(library("readr"))
-suppressMessages(library("DBI"))
-suppressMessages(library("sf"))
-suppressMessages(library("shiny"))
-suppressMessages(library("stringr"))
-suppressMessages(library("hrbrthemes"))
-
-theme = theme_ipsum()
-
+df = ingest_one_csv("2004.csv")
+plane_data_df = ingest_one_csv("plane-data.csv")
+carriers = ingest_one_csv("carriers.csv")
 ###################################################################
 # DATA                                                          ###
 ###################################################################
@@ -34,7 +17,7 @@ theme = theme_ipsum()
 #' Prepares the flight dataset.
 #'
 #' @param: dataframe
-#' @return: dataframe
+#' @return: data.frame
 clean = function(df) {
   # TailNum
   # Remove non-unicode chars.
@@ -45,103 +28,72 @@ clean = function(df) {
   return(df)
 }
 
-#' Function for ingesting a .csv file.
+#' Augments the flights data.frame with "origin" and "destination" information.
 #'
-#' @param: .csv file path
-#' @return: dataframe
-ingest_one_csv = function(file_path) {
-  df = read.csv(file_path, encoding = "ASCII")
+#' @param: flights data.frame
+#' @param: airports data.frame
+#' @return: data.frame
+# flights_with_coordinates = function(flights_df, airports_df) {
+#   # Create a data.frame with "origin" additional information.
+#   df = inner_join(
+#     flights_df, 
+#     airports_df, 
+#     by = c("Origin" = "iata"),
+#     copy = FALSE, 
+#     suffix = c(".f", ".o")
+#   )
+#   
+#   # Augment the data.frame with "destination" information.
+#   df = inner_join(
+#     df, 
+#     airports_df, 
+#     by = c("Dest" = "iata"),
+#     copy = FALSE, 
+#     suffix = c(".o", ".d")
+#   )
+#   
+#   # Also, translate (lat,long) values to geom.
+#   df[["geom.o"]] = df %>%
+#     st_as_sf(coords = c("long.o", "lat.o"), crs = 4326)
+#   
+#   df[["geom.d"]] = df %>%
+#     st_as_sf(coords = c("long.d", "lat.d"), crs = 4326)
+#   
+#   return(df)
+# }
+
+
+add_datetime_column = function(df, field) {
+  
+  df = df %>%
+    mutate(
+      field = 
+        parse_date_time(
+          paste(
+            paste(
+              paste(
+                df$Year, df$Month, sep = "-"
+              ), 
+              df$DayofMonth, sep = "-"
+            ), 
+            paste(
+              substr(df[[field]], 0, 2), substr(df[[field]], 3, 4), sep = ":")
+            ), 
+          order = "y-m-d HM"
+        )
+      )
   
   return(df)
 }
 
-#' Function for ingesting a .rds file.
+#' Converts (lat,long) pairs to geom points.
 #'
-#' @param: .rds file path
-#' @return: dataframe
-ingest_one_rds = function(file_path) {
-  df = readRDS(file_path)
+#' @param: data.frame
+#' @return: data.frame
+lat_log_to_geom = function(df) {
+  df = df %>% st_as_sf(coords = c("long", "lat"), crs = 4326)
   
   return(df)
-}
-
-#' Function for ingesting and concatenating .csv files in a directory.
-#'
-#' @param: .csv files directory
-#' @return: dataframe
-ingest_all_csv = function(path) {
-  df = list.files(path = path, , pattern = ".csv", full.names = TRUE) %>%
-    lapply(read.csv) %>% 
-    bind_rows
-  
-  return(df)
-}
-
-#' Function for ingesting and concatenating .rds files in a directory.
-#'
-#' @param: .rds files directory
-#' @return: dataframe
-ingest_all_rds = function(path) {
-  file_list = list.files(path = path, pattern = ".rds")
-  df = unlist(lapply(file_list, readRDS))
-  
-  return(df)
-}
-
-#' Insert / append to a SQLLite table.
-#'
-#' @param: dataframe
-#' @param: SQLLite table name
-#' @param: mode
-#' @return: dataframe
-df_to_sqlite = function(df, db.name = "db.sqlite", table.name, mode = "append") {
-  db = dbConnect(RSQLite::SQLite(), db.name)
-  
-  if(mode == "append") {
-    dbWriteTable(db, table.name, df, append = TRUE)
-  }
-  
-  if(mode == "overwrite") {
-    dbWriteTable(db, table.name, df, overwrite = TRUE)
-  }
-  
-  dbDisconnect(db)
-  
-  return(db)
-}
-
-sqlite_to_df = function(db.name = "db.sqlite", query) {
-  df = NULL
-  
-  # Connect and fetch.
-  out = tryCatch(
-    {
-      # Connect to db.
-      db = dbConnect(RSQLite::SQLite(), db.name)
-      
-      # Get result set.
-      result_set = dbSendQuery(db, query)
-      
-      # To data.frame.
-      df = fetch(result_set)
-      
-      return(df)
-    }, 
-    error = function(e) {
-      message("Exception: ")
-      message(e)
-      
-      return(NULL)
-    }, 
-    warning = function(e) {
-      message("Warning: ")
-      message(e)
-      
-      return(NULL)
-    }
-  )
-  
-  return(out)
 }
 
 
