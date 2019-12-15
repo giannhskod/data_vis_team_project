@@ -10,10 +10,12 @@ list.of.packages = c(
   "dplyr",
   "dbplyr",
   "ggplot2",
-  "kableExtra",
+#  "kableExtra",
   "readr",
   "RSQLite",
   "gganimate",
+  "heatmaply",
+  "d3heatmap",
   "tidyr",
   "sf",
   "viridis",
@@ -37,7 +39,7 @@ suppressMessages(library("dbplyr"))
 suppressMessages(library("ggplot2"))
 suppressMessages(library("hrbrthemes"))
 suppressMessages(library("tidyr"))
-suppressMessages(library("kableExtra"))
+#suppressMessages(library("kableExtra"))
 suppressMessages(library("lubridate"))
 suppressMessages(library("readr"))
 suppressMessages(library("DBI"))
@@ -48,6 +50,8 @@ suppressMessages(library("viridis"))
 suppressMessages(library("stringr"))
 suppressMessages(library("hrbrthemes"))
 suppressMessages(library("ggpubr"))
+suppressMessages(library("heatmaply"))
+suppressMessages(library("d3heatmap"))
 
 theme = theme_ipsum()
 data_src_dir = paste(getwd(), "/data_src/", sep = "")
