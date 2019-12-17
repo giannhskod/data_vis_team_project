@@ -10,7 +10,6 @@ list.of.packages = c(
   "dplyr",
   "dbplyr",
   "ggplot2",
-#  "kableExtra",
   "readr",
   "RSQLite",
   "gganimate",
