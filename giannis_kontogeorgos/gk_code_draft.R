@@ -13,20 +13,25 @@
 #                                         #
 #                                         #
 ###########################################
+
 current_working_dir = "~/master_classes/data_visualization_and_communication/data_vis_team_proj/"
-personal_working_directory = paste(getwd(), "/giannis_kontogeorgos", sep = "")
 setwd(current_working_dir)
+personal_working_directory = paste(getwd(), "/giannis_kontogeorgos", sep = "")
 source(paste(getwd(), "/base.R", sep = ""))
 
 df = sqlite_to_df(
   "data_src/db.sqlite",
   query = "
-  select *
-  from flights
-  where (Origin = 'TUL' OR Dest = 'TUL'
-  OR
-  Origin = 'MKE' OR Dest = 'MKE')
-  AND Year > 2003;"
+  SELECT flights.*,
+  orig_air.city as OriginCity,
+  orig_air.airport as OriginAirport,
+  dest_air.city as DestCity,
+  dest_air.airport as DestAirport
+  FROM flights
+  INNER JOIN airports  as orig_air on orig_air.iata = flights.Origin
+  INNER JOIN airports as dest_air on dest_air.iata = flights.Dest
+  WHERE (Origin = 'TUL' OR Dest = 'TUL' OR Origin = 'MKE' OR Dest = 'MKE') AND Year > 2003;
+  "
 )
 
 # Initial mutations for the dataframe
@@ -46,14 +51,23 @@ base_delay_plots <- df %>%
                               Origin != "MKE") ~ (ArrDelay - DepDelay)
     ),
     InferenceAirport = case_when((Origin == "TUL" |
-                                    Origin == "MKE") ~ Origin,
+                                    Origin == "MKE") ~ OriginAirport,
                                  (Origin != "TUL" &
-                                    Origin != "MKE") ~ Dest
+                                    Origin != "MKE") ~ DestAirport
+    ),
+    InferenceCity = case_when((Origin == "TUL" |
+                                 Origin == "MKE") ~ OriginCity,
+                              (Origin != "TUL" &
+                                 Origin != "MKE") ~ OriginAirport
     )
   ) %>%
   select(
     Origin,
+    OriginCity,
+    OriginAirport,
     Dest,
+    DestCity,
+    DestAirport,
     InferenceAirport,
     Year,
     Month,
@@ -68,9 +82,6 @@ base_delay_plots <- df %>%
     SecurityDelay,
     LateAircraftDelay
   )
-
-plane_data_df = ingest_one_csv("plane-data.csv")
-carriers = ingest_one_csv("carriers.csv")
 
 #############################
 # Resuable dataframes #
@@ -150,35 +161,35 @@ hmp_plot <- function (df, ...) {
   )
   return (plot)
 }
-select_values <- c("Year",
-                   "CarrierAvgDelay",
-                   "WeatherAvgDelay",
-                   "NASAvgDelay",
-                   "SecurityAvgDelay",
-                   "LateAircraftAvgDelay")
-heatmap_df_tul <- grouped_annual_avg_positive %>% 
-  filter(InferenceAirport == "TUL") %>%
+select_values <- c(
+  "Year",
+  "CarrierAvgDelay",
+  "WeatherAvgDelay",
+  "NASAvgDelay",
+  "SecurityAvgDelay",
+  "LateAircraftAvgDelay"
+)
+heatmap_df_tul <- grouped_annual_avg_positive %>%
+  filter(InferenceAirport == "Tulsa International") %>%
   ungroup() %>%
   select(select_values) %>%
   arrange(desc(Year))
 
-heatmap_df_mke <- grouped_annual_avg_positive %>% 
-  filter(InferenceAirport == "MKE") %>%
+heatmap_df_mke <- grouped_annual_avg_positive %>%
+  filter(InferenceAirport == "General Mitchell International") %>%
   ungroup() %>%
   select(select_values) %>%
   arrange(desc(Year))
-  
+
 heatmap_mke <- hmp_plot(heatmap_df_mke,
                         xlab = " ",
-                        ylab ="",
-                        main = "Milwaukee Airport Average Delay Types years 2004-2008"
-)
+                        ylab = "",
+                        main = "Milwaukee Airport Average Delay Types years 2004-2008")
 
 heatmap_tul <- hmp_plot(heatmap_df_tul,
                         xlab = " ",
-                        ylab ="",
-                        main = "Tulsa Airport Average Delay Types years 2004-2008"
-)
+                        ylab = "",
+                        main = "Tulsa Airport Average Delay Types years 2004-2008")
 
 heatmap_tul
 heatmap_mke
@@ -198,22 +209,82 @@ delay_per_carrier <- df %>%
 
 # Make a ggplot, with interactive bullet points for monthly timelapse, Total Distance, UniqueCarrier, and the relationship
 # between Departures Delay and Arrivals. 5 Fields Display.
-ggplot(
-  delay_per_carrier,
-  aes(
-    TotalDepDelay,
-    TotalArrDelay,
-    size = TotalDistance,
-    color = UniqueCarrier
+# libraries:
+
+grouped_monthly_avg_positive_gathered <- base_delay_plots %>%
+  filter(TotalDelay > 0) %>%
+  mutate(Date = make_datetime(Year, Month)) %>%
+  group_by(InferenceAirport, Year, Date) %>%
+  summarise(
+    TotalAvgDelay = mean(TotalDelay),
+    CarrierAvgDelay = mean(CarrierDelay),
+    WeatherAvgDelay = mean(WeatherDelay),
+    NASAvgDelay = mean(NASDelay),
+    SecurityAvgDelay = mean(SecurityDelay),
+    LateAircraftAvgDelay = mean(LateAircraftDelay)
+  ) %>%
+  gather(DelayType, Delay, TotalAvgDelay:LateAircraftAvgDelay)
+
+grouped_monthly_avg_positive_gathered_tul <-
+  grouped_monthly_avg_positive_gathered %>%
+  filter(InferenceAirport == "Tulsa International")
+
+grouped_monthly_avg_positive_gathered_mke <-
+  grouped_monthly_avg_positive_gathered %>%
+  filter(InferenceAirport == "General Mitchell International")
+
+# Plot
+active_group_line_plot <-
+  function(df, title, ylab_tilte) {
+    return(
+      df %>%
+        ggplot(aes(
+          x = Date,
+          y = Delay,
+          group = DelayType,
+          color = DelayType
+        )) +
+        geom_line() +
+        geom_point() +
+        scale_color_viridis(discrete = TRUE) +
+        ggtitle(title) +
+        theme_ipsum() +
+        ylab(ylab_tilte) +
+        transition_reveal(Date)
+        
+      
+    )
+  }
+
+# Tulsa
+tul_inderactive <- active_group_line_plot(
+  grouped_monthly_avg_positive_gathered_tul,
+  "Tulsa Delay Types by month Years 2004-2008",
+  "Delay time in minutes"
+)
+tul_inderactive
+anim_save(paste(
+  personal_working_directory,
+  "/plots/tulsa_delay_types_lines.gif",
+  sep = ""
+))
+
+# Milwakey
+mke_inderactive <- active_group_line_plot(
+  grouped_monthly_avg_positive_gathered_mke,
+  "Milwakey Delay Types by month Years 2004-2008",
+  "Delay time in minutes"
+)
+mke_inderactive
+anim_save(
+  paste(
+    personal_working_directory,
+    "/plots/milwakey_delay_types_lines.gif",
+    sep = ""
   )
-) +
-  geom_point() +
-  scale_x_log10() +
-  theme_bw() +
-  # gganimate specific bits:
-  labs(title = 'Month: {frame_time}', x = 'Departure Delay', y = 'Arrivals Delay') +
-  transition_time(Month) +
-  ease_aes('linear')
+)
+
+
+
 
 # Save at gif:
-anim_save("271-ggplot2-animated-gif-chart-with-gganimate1.gif")
