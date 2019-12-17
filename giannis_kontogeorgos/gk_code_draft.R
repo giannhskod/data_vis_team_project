@@ -197,16 +197,6 @@ heatmap_mke
 # Active PLot  #
 #############################
 
-delay_per_carrier <- df %>%
-  select(UniqueCarrier, ArrDelay, DepDelay, Total_delay, Distance, Month) %>%
-  filter(Total_delay > 0) %>%
-  group_by(UniqueCarrier, Month) %>%
-  summarise(
-    TotalDistance = sum(Distance),
-    TotalArrDelay = sum(ArrDelay),
-    TotalDepDelay = sum(DepDelay)
-  )
-
 # Make a ggplot, with interactive bullet points for monthly timelapse, Total Distance, UniqueCarrier, and the relationship
 # between Departures Delay and Arrivals. 5 Fields Display.
 # libraries:
@@ -272,7 +262,7 @@ anim_save(paste(
 # Milwakey
 mke_inderactive <- active_group_line_plot(
   grouped_monthly_avg_positive_gathered_mke,
-  "Milwakey Delay Types by month Years 2004-2008",
+  "Milwaukee Delay Types by month Years 2004-2008",
   "Delay time in minutes"
 )
 mke_inderactive
