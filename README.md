@@ -1,17 +1,17 @@
-# Data Visualization Team Project
-## *Already created Graphs*
-### Rplots
+# Data Visualization Team 4 Project
 
+## Description
+This project contains the work of our Team for the Data Visualization and Communication Team Project as also for the relative Hands on exercise. Each named folder contains the work of the related team Member, both in R and Tableau.
 
-* Grouped SideBySite BarPlots for UniqueCarrier ~ Delay
-* Stacked BarPlot for UniqueCarrier ~ Delay
-* BoxPlot for X:Carries ~ Y: Distance
-* Violin  for X:Carries ~ Y: Distance
-* Barplot Cancellation per Month
-* Stacked Barplot Cancellation Reason by Month
-* Stacked Barplot standrized Flights per day, per week, per month
-* AllUvial Plot in Top N airports linked to Top M Carriers,  Linked to Top K Destinations
+## Structure
+```bash
+├── base.R :              Contains the main reusable functionalities that we shared for the R graphics.
+├── data_src:             Folder that contains all the data sources that we used (content wipped out in gitignore due to huge size)
+├── spiros_politis:       Work of Spyros Politis
+├── giorgos_koroniotis:   Work of Giorgos Koroniotis
+├── giannis_kontogeorgos: Work of Giannis Kontogeorgos
+├── dimitris_markou:      Work of Dimitris Markou  
+├── hands_on :            
+└── README.md             ReadMe file
 
-### Tableau Plots
-
-2. Map plot for the the Carriers
+```
